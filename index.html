@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Análise de Compras</title>
+  <link href="style.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+<!-- Banner no topo -->
+<div class="header-banner">
+  <img src="dr.jpg" alt="Banner DR" class="banner-dr-img">
+</div>
+
+<div class="sidebar">
+  <a href="#" onclick="mostrarSecao('materiais-compras')" id="menu-materiais">Tabela de Compra Materiais</a>
+  <a href="#" onclick="mostrarSecao('equipamentos-compras')" id="menu-equipamentos">Tabela de Compras Equipamentos</a>
+  <a href="#" onclick="mostrarSecao('analise-materiais')" id="menu-analise-materiais">Análise Materiais</a>
+  <a href="#" onclick="mostrarSecao('analise-equipamentos')" id="menu-analise-equipamentos">Análise Equipamentos</a>
+  <a href="#" onclick="mostrarSecao('dashboard-consolidado')" id="menu-dashboard-consolidado"><b>Dashboard Consolidado</b></a>
+</div>
+
+<div class="content">
+
+  <!-- ==== DASHBOARD CONSOLIDADO ==== -->
+  <div id="dashboard-consolidado" style="display:none;">
+  <div class="dashboard-titulo-balao">
+    <h2>Dashboard Consolidado</h2>
+  </div>
+  <div class="row justify-content-center mb-4">
+      <!-- Bloco Orçado -->
+      <div class="col-lg-6 col-md-12 mb-4 d-flex flex-column align-items-center">
+        <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-3" style="min-width:270px; max-width:320px;">
+          <div class="card-body px-4 py-3">
+            <small>Total Orçado Projeto</small>
+            <h4 id="orcado-total" class="mb-0">R$ 0,00</h4>
+          </div>
+        </div>
+        <div class="d-flex justify-content-center gap-3 w-100">
+          <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-0" style="min-width:220px; max-width:260px;">
+            <div class="card-body px-3 py-3">
+              <small>Total Orçado Materiais</small>
+              <h4 id="orcado-materiais" class="mb-0">R$ 0,00</h4>
+            </div>
+          </div>
+          <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-0" style="min-width:220px; max-width:260px;">
+            <div class="card-body px-3 py-3">
+              <small>Total Orçado Equipamentos</small>
+              <h4 id="orcado-equipamentos" class="mb-0">R$ 0,00</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Bloco Real -->
+      <div class="col-lg-6 col-md-12 mb-4 d-flex flex-column align-items-center">
+        <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-3" style="min-width:270px; max-width:320px;">
+          <div class="card-body px-4 py-3">
+            <small>Total Real Projeto</small>
+            <h4 id="simulado-total" class="mb-0">R$ 0,00</h4>
+          </div>
+        </div>
+        <div class="d-flex justify-content-center gap-3 w-100">
+          <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-0" style="min-width:220px; max-width:260px;">
+            <div class="card-body px-3 py-3">
+              <small>Total Real Materiais</small>
+              <h4 id="simulado-materiais" class="mb-0">R$ 0,00</h4>
+            </div>
+          </div>
+          <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-0" style="min-width:220px; max-width:260px;">
+            <div class="card-body px-3 py-3">
+              <small>Total Real Equipamentos</small>
+              <h4 id="simulado-equipamentos" class="mb-0">R$ 0,00</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOVOS CARDS DE DIFERENÇA GERAL -->
+    <div class="row justify-content-center mb-4" id="linha-diferenca-geral">
+      <div class="col-auto">
+        <div class="card resumo-card border-0 shadow-sm text-center mb-0" style="min-width:220px;">
+          <div class="card-body px-4 py-3">
+            <small>Diferença (R$)</small>
+            <h4 id="cardDiferencaProjetoReais" class="mb-0">R$ 0,00</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-auto">
+        <div class="card resumo-card border-0 shadow-sm text-center mb-0" style="min-width:220px;">
+          <div class="card-body px-4 py-3">
+            <small>Diferença (%)</small>
+            <h4 id="cardDiferencaProjetoPct" class="mb-0">0,00%</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Tabela Consolidada Geral -->
+    <h3 class="titulo-tabela-consolidada mt-4 mb-3 text-center">Consolidado Geral de Itens</h3>
+    <div class="table-responsive">
+      <table class="tabela-consolidada table table-striped table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Categoria</th>
+            <th>Valor Orçado</th>
+            <th>Valor Total Real</th>
+            <th>Diferença (R$)</th>
+            <th>Diferença (%)</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaDashboardConsolidado"></tbody>
+      </table>
+    </div>
+
+    <!-- Top 10 Consolidado -->
+    <div class="row mt-5">
+      <div class="col-lg-12 mb-4">
+        <h4 class="text-center">Top 10 Itens Consolidado</h4>
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Categoria</th>
+              <th>Valor Orçado</th>
+              <th>Valor Total Real</th>
+              <th>Diferença (R$)</th>
+              <th>Diferença (%)</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaDashboardTop10"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Curva ABC Consolidada -->
+    <div class="row mt-5">
+      <div class="col-lg-12 mb-4">
+        <h4 class="text-center">Curva ABC Consolidada Real</h4>
+        <div id="graficoDashboardCurvaABC" style="width:100%; min-height:240px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==== FILTRO + CARDS RESUMO MATERIAIS ==== -->
+  <div class="row align-items-center mb-4" id="filtro-cards-materiais">
+    <div class="col-auto">
+      <label for="filtroGrupoMateriais" class="form-label mb-0 me-2">Grupo:</label>
+      <select id="filtroGrupoMateriais" class="form-select form-select-sm" style="width: 270px;">
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+    <div class="col d-flex justify-content-end flex-wrap gap-3">
+      <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-0">
+        <div class="card-body px-4 py-3">
+          <small>Preço Total Orçado</small>
+          <h4 id="cardTotalPrecoMateriais" class="mb-0">R$ 0,00</h4>
+        </div>
+      </div>
+      <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-0">
+        <div class="card-body px-4 py-3">
+          <small>Valor Total Real</small>
+          <h4 id="cardNovoTotalMateriais" class="mb-0">R$ 0,00</h4>
+        </div>
+      </div>
+      <div class="card resumo-card border-0 shadow-sm text-center mb-0">
+        <div class="card-body px-4 py-3">
+          <small>Diferença (R$)</small>
+          <h4 id="cardDiferencaReaisMateriais" class="mb-0">R$ 0,00</h4>
+        </div>
+      </div>
+      <div class="card resumo-card border-0 shadow-sm text-center mb-0">
+        <div class="card-body px-4 py-3">
+          <small>Diferença (%)</small>
+          <h4 id="cardDiferencaPctMateriais" class="mb-0">0,00%</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==== TABELA DE MATERIAIS ==== -->
+  <div id="materiais-compras">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <span class="me-2"><i class="bi bi-table"></i></span>
+          <h2 class="mb-0 flex-grow-1">Tabela de Compra Materiais</h2>
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportarPDF('materiais-compras', 'Materiais.pdf')">
+            <i class="bi bi-download"></i> Exportar PDF
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-hover align-middle table-minimal">
+            <thead class="table-light">
+              <tr>
+                <th style="width:22%">Descrição</th>
+                <th class="text-center" style="width:8%">Qtd.</th>
+                <th class="text-center" style="width:9%">Unidade</th>
+                <th class="text-center" style="width:12%">Preço Unitário</th>
+                <th class="text-center" style="width:12%">Preço Total Orçado</th>
+                <th class="text-center" style="width:12%">Preço Real</th>
+                <th class="text-center" style="width:12%">Valor Total Real</th>
+                <th class="text-center" style="width:8%">Dif. (R$)</th>
+                <th class="text-center" style="width:8%">Dif. (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==== FILTRO + CARDS RESUMO EQUIPAMENTOS ==== -->
+  <div class="row align-items-center mb-4" id="filtro-cards-equipamentos" style="display:none;">
+    <div class="col-auto">
+      <label for="filtroGrupoEquipamentos" class="form-label mb-0 me-2">Grupo:</label>
+      <select id="filtroGrupoEquipamentos" class="form-select form-select-sm" style="width: 270px;">
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+    <div class="col d-flex justify-content-end flex-wrap gap-3">
+      <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-0">
+        <div class="card-body px-4 py-3">
+          <small>Preço Total Orçado</small>
+          <h4 id="cardTotalPrecoEquipamentos" class="mb-0">R$ 0,00</h4>
+        </div>
+      </div>
+      <div class="card resumo-card border-0 shadow-sm bg-light text-center mb-0">
+        <div class="card-body px-4 py-3">
+          <small>Valor Total Real</small>
+          <h4 id="cardNovoTotalEquipamentos" class="mb-0">R$ 0,00</h4>
+        </div>
+      </div>
+      <div class="card resumo-card border-0 shadow-sm text-center mb-0">
+        <div class="card-body px-4 py-3">
+          <small>Diferença (R$)</small>
+          <h4 id="cardDiferencaReaisEquipamentos" class="mb-0">R$ 0,00</h4>
+        </div>
+      </div>
+      <div class="card resumo-card border-0 shadow-sm text-center mb-0">
+        <div class="card-body px-4 py-3">
+          <small>Diferença (%)</small>
+          <h4 id="cardDiferencaPctEquipamentos" class="mb-0">0,00%</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==== TABELA DE EQUIPAMENTOS ==== -->
+  <div id="equipamentos-compras" style="display:none;">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <span class="me-2"><i class="bi bi-table"></i></span>
+          <h2 class="mb-0 flex-grow-1">Tabela de Compras Equipamentos</h2>
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportarPDF('equipamentos-compras', 'Equipamentos.pdf')">
+            <i class="bi bi-download"></i> Exportar PDF
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-hover align-middle table-minimal">
+            <thead class="table-light">
+              <tr>
+                <th style="width:22%">Descrição</th>
+                <th class="text-center" style="width:8%">Qtd.</th>
+                <th class="text-center" style="width:9%">Unidade</th>
+                <th class="text-center" style="width:12%">Preço Unitário</th>
+                <th class="text-center" style="width:12%">Preço Total Orçado</th>
+                <th class="text-center" style="width:12%">Preço Real</th>
+                <th class="text-center" style="width:12%">Valor Total Real</th>
+                <th class="text-center" style="width:8%">Dif. (R$)</th>
+                <th class="text-center" style="width:8%">Dif. (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== ANÁLISE DE MATERIAIS =================== -->
+  <div id="analise-materiais" style="display:none;">
+    <h2>Análise de Materiais</h2>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Curva ABC Orçada</h5>
+        <canvas id="graficoABCOrcadaMateriais" height="220"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Curva ABC Real</h5>
+        <canvas id="graficoABCSimuladaMateriais" height="220"></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Tabela ABC Orçada</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Valor Total</th>
+              <th>Acumulado (%)</th>
+              <th>Classe</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaABCOrcadaMateriais"></tbody>
+        </table>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Tabela ABC Real</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Valor Total Real</th>
+              <th>Acumulado (%)</th>
+              <th>Classe</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaABCSimuladaMateriais"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-lg-6 mb-4">
+        <h5>Top 10 Quantidades</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Quantidade</th>
+              <th>Unidade</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTop10QuantMateriais"></tbody>
+        </table>
+      </div>
+      <div class="col-12 col-lg-6 mb-4">
+        <h5>Top 10 Valores</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Valor Orçado</th>
+              <th>Valor Real</th>
+              <th>Diferença (R$)</th>
+              <th>Diferença (%)</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTop10ValoresMateriais"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Distribuição de Itens por Classe ABC (Orçada)</h5>
+        <canvas id="pizzaABCItensMateriais"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Distribuição de Valores por Classe ABC (Orçada)</h5>
+        <canvas id="pizzaABCValoresMateriais"></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Distribuição de Itens por Classe ABC (Real)</h5>
+        <canvas id="pizzaABCItensMateriaisSim"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Distribuição de Valores por Classe ABC (Real)</h5>
+        <canvas id="pizzaABCValoresMateriaisSim"></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 mb-4">
+        <h5>Tabela de Totais por Grupo</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Grupo</th>
+              <th>Valor Orçado</th>
+              <th>Valor Real</th>
+              <th>Diferença (R$)</th>
+              <th>Diferença (%)</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTotaisGrupoMateriais"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== ANÁLISE DE EQUIPAMENTOS =================== -->
+  <div id="analise-equipamentos" style="display:none;">
+    <h2>Análise de Equipamentos</h2>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Curva ABC Orçada</h5>
+        <canvas id="graficoABCOrcadaEquipamentos" height="220"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Curva ABC Real</h5>
+        <canvas id="graficoABCSimuladaEquipamentos" height="220"></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Tabela ABC Orçada</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Valor Total</th>
+              <th>Acumulado (%)</th>
+              <th>Classe</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaABCOrcadaEquipamentos"></tbody>
+        </table>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Tabela ABC Real</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Valor Total Real</th>
+              <th>Acumulado (%)</th>
+              <th>Classe</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaABCSimuladaEquipamentos"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-lg-6 mb-4">
+        <h5>Top 10 Quantidades</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Quantidade</th>
+              <th>Unidade</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTop10QuantEquipamentos"></tbody>
+        </table>
+      </div>
+      <div class="col-12 col-lg-6 mb-4">
+        <h5>Top 10 Valores</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Valor Orçado</th>
+              <th>Valor Real</th>
+              <th>Diferença (R$)</th>
+              <th>Diferença (%)</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTop10ValoresEquipamentos"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Distribuição de Itens por Classe ABC (Orçada)</h5>
+        <canvas id="pizzaABCItensEquipamentos"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Distribuição de Valores por Classe ABC (Orçada)</h5>
+        <canvas id="pizzaABCValoresEquipamentos"></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h5>Distribuição de Itens por Classe ABC (Real)</h5>
+        <canvas id="pizzaABCItensEquipamentosSim"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5>Distribuição de Valores por Classe ABC (Real)</h5>
+        <canvas id="pizzaABCValoresEquipamentosSim"></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 mb-4">
+        <h5>Tabela de Totais por Grupo</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Grupo</th>
+              <th>Valor Orçado</th>
+              <th>Valor Real</th>
+              <th>Diferença (R$)</th>
+              <th>Diferença (%)</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTotaisGrupoEquipamentos"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="main.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
